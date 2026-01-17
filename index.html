@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Analyzer | XD4Solutions</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root{--bg:#0a0f1c;--bg2:#111827;--bg3:#1a2332;--gold:#c9a962;--gold2:#8b7355;--blue:#3b82f6;--text:#f8fafc;--text2:#94a3b8;--text3:#64748b;--success:#10b981;--warn:#f59e0b;--danger:#ef4444;--border:rgba(255,255,255,0.08)}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+        .bg-grad{position:fixed;inset:0;background:radial-gradient(ellipse at 20% -20%,rgba(59,130,246,0.15),transparent),radial-gradient(ellipse at 80% 100%,rgba(201,169,98,0.1),transparent);pointer-events:none;z-index:-1}
+        .container{max-width:1100px;margin:0 auto;padding:40px 24px}
+        .header{text-align:center;margin-bottom:50px}
+        .brand{display:inline-flex;align-items:center;gap:12px;margin-bottom:20px}
+        .brand-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px}
+        .brand-text{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:600}
+        h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3rem);margin-bottom:12px;background:linear-gradient(135deg,var(--text),var(--text2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .subtitle{color:var(--text2);font-size:1.1rem}
+        .gold-line{width:60px;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:20px auto}
+        .card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:20px;backdrop-filter:blur(10px)}
+        .card-head{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+        .step{width:32px;height:32px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--bg);font-size:0.9rem}
+        .card-title{font-family:'Playfair Display',serif;font-size:1.2rem}
+        .opts{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+        @media(max-width:800px){.opts{grid-template-columns:repeat(3,1fr)}}
+        @media(max-width:500px){.opts{grid-template-columns:repeat(2,1fr)}}
+        .opt{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:20px 12px;cursor:pointer;text-align:center;transition:all 0.3s}
+        .opt:hover{border-color:var(--gold);transform:translateY(-3px)}
+        .opt.sel{border-color:var(--gold);background:rgba(201,169,98,0.1)}
+        .opt-icon{font-size:2rem;margin-bottom:10px}
+        .opt-title{font-weight:600;font-size:0.85rem;margin-bottom:4px}
+        .opt-desc{font-size:0.7rem;color:var(--text3)}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        @media(max-width:500px){.form-row{grid-template-columns:1fr}}
+        .form-group{margin-bottom:16px}
+        .label{display:block;font-size:0.8rem;color:var(--text2);margin-bottom:8px;font-weight:500}
+        .label .req{color:var(--gold)}
+        select,textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:inherit;font-size:0.9rem}
+        select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:40px;cursor:pointer}
+        select:focus,textarea:focus{outline:none;border-color:var(--gold)}
+        textarea{min-height:140px;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:0.8rem;line-height:1.6}
+        .urg-group{display:flex;gap:10px;flex-wrap:wrap}
+        .urg{padding:10px 18px;border:1px solid var(--border);border-radius:50px;background:var(--bg3);cursor:pointer;font-size:0.85rem;font-weight:500;display:flex;align-items:center;gap:8px;transition:all 0.3s}
+        .urg:hover{transform:scale(1.02)}
+        .urg[data-u="urgent"]{border-color:rgba(239,68,68,0.3)}
+        .urg[data-u="moderate"]{border-color:rgba(245,158,11,0.3)}
+        .urg[data-u="normal"]{border-color:rgba(16,185,129,0.3)}
+        .urg.sel[data-u="urgent"]{background:rgba(239,68,68,0.15);border-color:var(--danger);color:#fca5a5}
+        .urg.sel[data-u="moderate"]{background:rgba(245,158,11,0.15);border-color:var(--warn);color:#fcd34d}
+        .urg.sel[data-u="normal"]{background:rgba(16,185,129,0.15);border-color:var(--success);color:#6ee7b7}
+        .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+        .upload{border:2px dashed var(--border);border-radius:14px;padding:35px 20px;text-align:center;cursor:pointer;transition:all 0.3s;margin-bottom:16px}
+        .upload:hover,.upload.drag{border-color:var(--gold);background:rgba(201,169,98,0.05)}
+        .upload.has{border-color:var(--success);background:rgba(16,185,129,0.05)}
+        .upload-icon{font-size:2.5rem;margin-bottom:12px}
+        .upload-text{color:var(--text2);margin-bottom:6px}
+        .upload-hint{font-size:0.75rem;color:var(--text3)}
+        .file-input{display:none}
+        .file-info{display:none;align-items:center;justify-content:center;gap:10px;padding:12px;background:var(--bg3);border-radius:10px;margin-bottom:16px}
+        .file-info.show{display:flex}
+        .file-name{font-weight:500;color:var(--gold)}
+        .file-size{font-size:0.8rem;color:var(--text3)}
+        .remove-btn{background:var(--danger);color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:0.8rem}
+        .divider{display:flex;align-items:center;gap:14px;margin:20px 0;color:var(--text3);font-size:0.8rem}
+        .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+        .analyze-btn{width:100%;padding:18px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:14px;font-size:1.05rem;font-weight:600;color:var(--bg);cursor:pointer;transition:all 0.3s;margin-top:10px}
+        .analyze-btn:hover{transform:translateY(-2px);box-shadow:0 15px 35px rgba(201,169,98,0.3)}
+        .analyze-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+        .result{display:none}
+        .result.show{display:block;animation:fadeIn 0.5s}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .result-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+        .result-title{font-family:'Playfair Display',serif;font-size:1.4rem;display:flex;align-items:center;gap:10px}
+        .badge{padding:5px 12px;border-radius:16px;font-size:0.75rem;font-weight:600}
+        .badge.low{background:rgba(16,185,129,0.2);color:#6ee7b7}
+        .badge.med{background:rgba(245,158,11,0.2);color:#fcd34d}
+        .badge.high{background:rgba(239,68,68,0.2);color:#fca5a5}
+        .badge.crit{background:rgba(0,0,0,0.5);color:#fff}
+        .result-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:28px;max-height:550px;overflow-y:auto;line-height:1.8}
+        .result-box h1,.result-box h2,.result-box h3{font-family:'Playfair Display',serif;color:var(--gold);margin:20px 0 10px}
+        .result-box h1{font-size:1.4rem;border-bottom:1px solid var(--border);padding-bottom:10px}
+        .result-box h2{font-size:1.2rem}
+        .result-box h3{font-size:1.05rem}
+        .result-box p{margin-bottom:14px;color:var(--text2)}
+        .result-box ul,.result-box ol{margin:14px 0;padding-left:22px}
+        .result-box li{margin-bottom:6px;color:var(--text2)}
+        .result-box strong{color:var(--text)}
+        .result-box table{width:100%;border-collapse:collapse;margin:16px 0}
+        .result-box th,.result-box td{padding:10px;border:1px solid var(--border);text-align:left;font-size:0.9rem}
+        .result-box th{background:var(--bg3);color:var(--gold)}
+        .result-box code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:0.85rem}
+        .result-box blockquote{border-left:3px solid var(--gold);padding-left:14px;margin:14px 0;color:var(--text3);font-style:italic}
+        .result-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+        .act-btn{flex:1;min-width:130px;padding:12px 18px;border:1px solid var(--border);border-radius:10px;background:var(--bg3);font-size:0.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--text);transition:all 0.3s}
+        .act-btn:hover{transform:translateY(-2px)}
+        .act-btn.primary{background:linear-gradient(135deg,var(--success),#059669);border-color:var(--success);color:#fff}
+        .loading{display:none;position:fixed;inset:0;background:rgba(10,15,28,0.95);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+        .loading.show{display:flex}
+        .spinner{width:50px;height:50px;border:4px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .load-text{font-size:1.1rem;color:var(--text2)}
+        .load-sub{font-size:0.85rem;color:var(--text3);max-width:350px;text-align:center}
+        .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 22px;display:flex;align-items:center;gap:10px;z-index:1001;opacity:0;transition:all 0.4s}
+        .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+        .toast.success{border-color:var(--success)}
+        .toast.error{border-color:var(--danger)}
+        .footer{text-align:center;padding:35px 0 20px;color:var(--text3);font-size:0.8rem}
+        .footer-brand{font-family:'Playfair Display',serif;font-weight:600;color:var(--gold)}
+        .footer-warn{margin-top:10px;padding:10px 18px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:8px;display:inline-block;font-size:0.75rem;color:var(--warn)}
+    </style>
+</head>
+<body>
+    <div class="bg-grad"></div>
+    <div class="container">
+        <header class="header">
+            <div class="brand"><div class="brand-icon">⚖️</div><span class="brand-text">XD4Solutions</span></div>
+            <h1>Contract Analyzer</h1>
+            <p class="subtitle">Análise contratual inteligente com IA</p>
+            <div class="gold-line"></div>
+        </header>
+
+        <div class="card">
+            <div class="card-head"><div class="step">1</div><h2 class="card-title">Tipo de Análise</h2></div>
+            <div class="opts" id="opts">
+                <div class="opt" data-t="completa" onclick="selOpt(this)"><div class="opt-icon">📋</div><div class="opt-title">Completa</div><div class="opt-desc">Parecer detalhado</div></div>
+                <div class="opt" data-t="rapida" onclick="selOpt(this)"><div class="opt-icon">⚡</div><div class="opt-title">Rápida</div><div class="opt-desc">Resumo executivo</div></div>
+                <div class="opt" data-t="clausula" onclick="selOpt(this)"><div class="opt-icon">🔍</div><div class="opt-title">Cláusulas</div><div class="opt-desc">Revisão específica</div></div>
+                <div class="opt" data-t="comparar" onclick="selOpt(this)"><div class="opt-icon">⚖️</div><div class="opt-title">Benchmark</div><div class="opt-desc">Melhores práticas</div></div>
+                <div class="opt" data-t="checklist" onclick="selOpt(this)"><div class="opt-icon">✅</div><div class="opt-title">Checklist</div><div class="opt-desc">Due diligence</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><div class="step">2</div><h2 class="card-title">Informações</h2></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="label">Tipo de Contrato <span class="req">*</span></label>
+                    <select id="cType">
+                        <option value="">Selecione...</option>
+                        <option>Prestação de Serviços (PJ)</option>
+                        <option>Contrato de Trabalho (CLT)</option>
+                        <option>Fornecedor/Compras</option>
+                        <option>Tecnologia/SaaS/Software</option>
+                        <option>Parceria/Joint Venture</option>
+                        <option>NDA/Confidencialidade</option>
+                        <option>Locação/Imóveis</option>
+                        <option>Outro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="label">Valor Estimado</label>
+                    <select id="cValue">
+                        <option value="">Selecione...</option>
+                        <option>Até R$ 50.000</option>
+                        <option>R$ 50.001 - R$ 200.000</option>
+                        <option>R$ 200.001 - R$ 500.000</option>
+                        <option>Acima de R$ 500.000</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="label">Urgência</label>
+                <div class="urg-group">
+                    <div class="urg" data-u="urgent" onclick="selUrg(this)"><span class="dot"></span>Urgente</div>
+                    <div class="urg" data-u="moderate" onclick="selUrg(this)"><span class="dot"></span>Moderada</div>
+                    <div class="urg" data-u="normal" onclick="selUrg(this)"><span class="dot"></span>Normal</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><div class="step">3</div><h2 class="card-title">Contrato <span style="color:var(--gold)">*</span></h2></div>
+            <div class="upload" id="uploadZone" onclick="document.getElementById('fileIn').click()">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">Arraste ou clique para selecionar</div>
+                <div class="upload-hint">PDF, DOCX, TXT (máx. 10MB)</div>
+                <input type="file" id="fileIn" class="file-input" accept=".pdf,.docx,.doc,.txt">
+            </div>
+            <div class="file-info" id="fileInfo">
+                <span class="file-name" id="fName"></span>
+                <span class="file-size" id="fSize"></span>
+                <button class="remove-btn" onclick="rmFile(event)">✕</button>
+            </div>
+            <div class="divider">ou cole o texto</div>
+            <textarea id="cText" placeholder="Cole o texto do contrato aqui..."></textarea>
+            <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">🔍 Analisar Contrato</button>
+        </div>
+
+        <div class="card result" id="resultSec">
+            <div class="result-head">
+                <div class="result-title">📊 Resultado</div>
+                <span class="badge" id="riskBadge"></span>
+            </div>
+            <div class="result-box" id="resultBox"></div>
+            <div class="result-actions">
+                <button class="act-btn primary" onclick="copyRes()">📋 Copiar</button>
+                <button class="act-btn" onclick="dlRes()">💾 Baixar</button>
+                <button class="act-btn" onclick="newAn()">🔄 Nova</button>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p><span class="footer-brand">XD4Solutions</span> — Jurídico</p>
+            <div class="footer-warn">⚠️ Valide com supervisor</div>
+        </footer>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div class="load-text">Analisando contrato...</div>
+        <div class="load-sub">Claude está processando. Pode levar 30s a 2min.</div>
+    </div>
+
+    <div class="toast" id="toast"><span id="tIcon">✓</span><span id="tMsg"></span></div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        let selA=null,selU=null,resText='';
+        const uz=document.getElementById('uploadZone'),fi=document.getElementById('fileIn'),ct=document.getElementById('cText');
+
+        ['dragenter','dragover','dragleave','drop'].forEach(e=>uz.addEventListener(e,ev=>{ev.preventDefault();ev.stopPropagation()}));
+        ['dragenter','dragover'].forEach(e=>uz.addEventListener(e,()=>uz.classList.add('drag')));
+        ['dragleave','drop'].forEach(e=>uz.addEventListener(e,()=>uz.classList.remove('drag')));
+        uz.addEventListener('drop',e=>{if(e.dataTransfer.files.length)handleF(e.dataTransfer.files[0])});
+        fi.addEventListener('change',e=>{if(e.target.files.length)handleF(e.target.files[0])});
+
+        async function handleF(f){
+            if(f.size>10*1024*1024){toast('Arquivo grande demais','error');return}
+            const ext=f.name.split('.').pop().toLowerCase();
+            if(!['pdf','docx','doc','txt'].includes(ext)){toast('Formato não suportado','error');return}
+            toast('Processando...');
+            try{
+                let t='';
+                if(ext==='pdf'){const pdf=await pdfjsLib.getDocument(await f.arrayBuffer()).promise;for(let i=1;i<=pdf.numPages;i++){const pg=await pdf.getPage(i),c=await pg.getTextContent();t+=c.items.map(x=>x.str).join(' ')+'\\n'}}
+                else if(ext==='docx'||ext==='doc'){const r=await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()});t=r.value}
+                else t=await f.text();
+                if(t.length<50){toast('Texto insuficiente','error');return}
+                ct.value=t;
+                document.getElementById('fName').textContent=f.name;
+                document.getElementById('fSize').textContent=(f.size/1024).toFixed(1)+'KB';
+                document.getElementById('fileInfo').classList.add('show');
+                uz.classList.add('has');
+                toast('Carregado!','success');
+            }catch(e){toast('Erro','error');console.error(e)}
+        }
+
+        function rmFile(e){e.stopPropagation();ct.value='';document.getElementById('fileInfo').classList.remove('show');uz.classList.remove('has');fi.value=''}
+        function selOpt(el){document.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');selA=el.dataset.t}
+        function selUrg(el){document.querySelectorAll('.urg').forEach(u=>u.classList.remove('sel'));el.classList.add('sel');selU=el.dataset.u}
+        function toast(m,t='success'){const to=document.getElementById('toast');document.getElementById('tIcon').textContent=t==='success'?'✓':'✕';document.getElementById('tMsg').textContent=m;to.className='toast show '+t;setTimeout(()=>to.classList.remove('show'),3500)}
+
+        async function analyze(){
+            const cType=document.getElementById('cType').value,cValue=document.getElementById('cValue').value,text=ct.value.trim();
+            if(!selA){toast('Selecione tipo de análise','error');return}
+            if(!cType){toast('Selecione tipo de contrato','error');return}
+            if(text.length<100){toast('Insira o contrato','error');return}
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('analyzeBtn').disabled=true;
+            try{
+                const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({analysisType:selA,contractType:cType,contractValue:cValue,urgency:selU,contractText:text})});
+                if(!res.ok)throw new Error('API Error');
+                const data=await res.json();
+                resText=data.analysis;
+                document.getElementById('resultBox').innerHTML=marked.parse(resText);
+                const rb=document.getElementById('riskBadge');
+                if(resText.includes('🟢')||resText.toLowerCase().includes('baixo')){rb.textContent='🟢 Baixo';rb.className='badge low'}
+                else if(resText.includes('🟡')||resText.toLowerCase().includes('médio')){rb.textContent='🟡 Médio';rb.className='badge med'}
+                else if(resText.includes('🔴')||resText.toLowerCase().includes('alto')){rb.textContent='🔴 Alto';rb.className='badge high'}
+                else if(resText.includes('⚫')||resText.toLowerCase().includes('crítico')){rb.textContent='⚫ Crítico';rb.className='badge crit'}
+                else{rb.textContent='';rb.className='badge'}
+                document.getElementById('resultSec').classList.add('show');
+                document.getElementById('resultSec').scrollIntoView({behavior:'smooth'});
+                toast('Concluído!','success');
+            }catch(e){console.error(e);toast('Erro na análise','error')}
+            finally{document.getElementById('loading').classList.remove('show');document.getElementById('analyzeBtn').disabled=false}
+        }
+
+        function copyRes(){navigator.clipboard.writeText(resText).then(()=>toast('Copiado!','success'))}
+        function dlRes(){const b=new Blob([resText],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='analise-xd4.txt';a.click();toast('Baixando','success')}
+        function newAn(){document.getElementById('resultSec').classList.remove('show');ct.value='';rmFile({stopPropagation:()=>{}});document.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));document.querySelectorAll('.urg').forEach(u=>u.classList.remove('sel'));document.getElementById('cType').value='';document.getElementById('cValue').value='';selA=null;selU=null;window.scrollTo({top:0,behavior:'smooth'})}
+    </script>
+</body>
+</html>
